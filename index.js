@@ -1,4 +1,4 @@
-const { Client, Guild } = require("discord.js")
+const { Client, MessageAttachment } = require("discord.js")
 const mongoose = require('mongoose')
 const argumentsHandler = require('./argumentsHandler')
 const urlRegexSafe = require('url-regex-safe')
@@ -21,14 +21,6 @@ try {
 }
 
 const GuildInstance = require('./guildModel')
-
-const messages = [
-    'stop being horny',
-    'go to horny jail',
-    'HORNY POLICE OPEN UP',
-    'stop horny or else',
-    '*loads shotgun*'
-]
 
 client.on('guildCreate', async guild => {
     try {
@@ -83,7 +75,7 @@ client.on('message', async (message) => {
             let searchResult = await GuildInstance.findOne({ guildId: message.guild.id, 'members.fullUsername': `${message.author.username}#${message.author.discriminator}` })
             if (searchResult == null) {
                 await GuildInstance.updateOne({ guildId: message.guild.id }, { $push: { members: { fullUsername: `${message.author.username}#${message.author.discriminator}`, count: 1 } } })
-                await message.channel.send(messages[Math.floor(Math.random() * messages.length)], { files: ['https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'] })
+                await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
                 await message.channel.send(`${message.author} is being horny for the first time!`)
             } else {
                 const user = searchResult.members.filter(member => member.fullUsername == `${message.author.username}#${message.author.discriminator}` )[0]
@@ -101,7 +93,7 @@ client.on('message', async (message) => {
                 ])
 
                 let updateRes = await GuildInstance.updateOne({ guildId: message.guild.id }, { $set: { [`members.${aggRes[0].index}.count`]: user.count + 1 } })
-                await message.channel.send(messages[Math.floor(Math.random() * messages.length)], { files: ['https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'] })
+                await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
                 await message.channel.send(`${message.author} horny count: ${user.count + 1}`)
             }
 
