@@ -38,6 +38,7 @@ client.on('guildCreate', async guild => {
 client.on('message', async (message) => {
     try {
         if (message.author.bot) return
+
     
         if (message.content.startsWith('!police ')) {
             const getGuildRes = await GuildInstance.findOne({ guildId: message.guild.id })

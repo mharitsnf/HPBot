@@ -54,7 +54,68 @@ const argumentsHandler = {
 
             return
         } catch (error) {
-            message.channel.send(error.message)
+            message.channel.send("I'm having a problem. Please try again!")
+            console.log(error)
+            return
+        }
+    },
+    rank: async (client, message, args) => {
+        try {
+            const GuildInstance = require('./guildModel')
+
+            let getResult = await GuildInstance.aggregate([
+                {
+                    $match: {
+                        guildId: message.guild.id
+                    }
+                },
+                {
+                    $unwind: '$members'
+                },
+                {
+                    $sort: {
+                        'members.count': 1
+                    }
+                },
+                {
+                    $limit: 5
+                },
+                {
+                    $project: {
+                        member: '$members'
+                    }
+                }
+            ])
+
+            if (getResult.length == 0) {
+                message.channel.send("No one is horny here. Keep it up!")
+                return
+            }
+
+            let parsedResult = [
+                { name: 'Name', value: '', inline: true },
+                { name: 'Count', value: '', inline: true }
+            ]
+            getResult.forEach(value => {
+                parsedResult[0].value += value.member.fullUsername.split('#')[0] + "\ "
+                parsedResult[1].value += value.member.count + "\ "
+            })
+
+            parsedResult[0].value.trim()
+            parsedResult[1].value.trim()
+
+            message.channel.send({
+                embed: {
+                    title: 'Top 5 Horny Level',
+                    fields: parsedResult
+                }
+            })
+
+            return
+            
+        } catch (error) {
+            message.channel.send("I'm having a problem. Please try again!")
+            console.log(error)
             return
         }
     }
