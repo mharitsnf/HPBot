@@ -74,7 +74,7 @@ const argumentsHandler = {
                 },
                 {
                     $sort: {
-                        'members.count': 1
+                        'members.count': -1
                     }
                 },
                 {
@@ -97,8 +97,8 @@ const argumentsHandler = {
                 { name: 'Count', value: '', inline: true }
             ]
             getResult.forEach(value => {
-                parsedResult[0].value += value.member.fullUsername.split('#')[0] + "\ "
-                parsedResult[1].value += value.member.count + "\ "
+                parsedResult[0].value += value.member.fullUsername.split('#')[0] + "\n"
+                parsedResult[1].value += value.member.count + "\n"
             })
 
             parsedResult[0].value.trim()
