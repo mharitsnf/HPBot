@@ -80,7 +80,11 @@ client.on('message', async (message) => {
             if (searchResult == null) {
                 await GuildInstance.updateOne({ guildId: message.guild.id }, { $push: { members: { fullUsername: `${message.author.username}#${message.author.discriminator}`, count: 1 } } })
                 await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
-                await message.channel.send(`${message.author} is being horny for the first time!`)
+                if (`${message.author.username}#${message.author.discriminator}` == "imsiraf#4245") {
+                    await message.channel.send(`${message.author} is being gay for the first time!`)
+                } else {
+                    await message.channel.send(`${message.author} is being horny for the first time!`)
+                }
             } else {
                 const user = searchResult.members.filter(member => member.fullUsername == `${message.author.username}#${message.author.discriminator}` )[0]
                 let aggRes = await GuildInstance.aggregate([
@@ -96,9 +100,13 @@ client.on('message', async (message) => {
                     }
                 ])
 
-                let updateRes = await GuildInstance.updateOne({ guildId: message.guild.id }, { $set: { [`members.${aggRes[0].index}.count`]: user.count + 1 } })
+                await GuildInstance.updateOne({ guildId: message.guild.id }, { $set: { [`members.${aggRes[0].index}.count`]: user.count + 1 } })
                 await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
-                await message.channel.send(`${message.author} horny count: ${user.count + 1}`)
+                if (`${message.author.username}#${message.author.discriminator}` == "imsiraf#4245") {
+                    await message.channel.send(`${message.author} gay count: ${user.count + 1}`)
+                } else {
+                    await message.channel.send(`${message.author} horny count: ${user.count + 1}`)
+                }
             }
 
             return
