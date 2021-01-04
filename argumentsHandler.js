@@ -100,10 +100,7 @@ const argumentsHandler = {
                 parsedResult[0].value += value.member.fullUsername.split('#')[0] + "\n"
                 parsedResult[1].value += value.member.count + "\n"
             })
-
-            parsedResult[0].value.trim()
-            parsedResult[1].value.trim()
-
+            
             message.channel.send({
                 embed: {
                     title: 'Top 5 Horny Level',

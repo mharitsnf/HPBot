@@ -38,7 +38,6 @@ client.on('guildCreate', async guild => {
 client.on('message', async (message) => {
     try {
         if (message.author.bot) return
-
     
         if (message.content.startsWith('!police ')) {
             const getGuildRes = await GuildInstance.findOne({ guildId: message.guild.id })
@@ -68,11 +67,15 @@ client.on('message', async (message) => {
 
         if (!activeChannels.includes(message.channel.id)) return
         
-        const matches = message.content.match(urlRegexSafe())
+        let matches = message.content.match(urlRegexSafe())
+        let urlCheck = false
         if (matches != null) {
-            const result = matches.filter(word => !word.includes('tenor'))
-            if (result.length === 0) return
+            const gifFilter = matches.filter(word => !word.includes('tenor'))
+            if (gifFilter.length != 0) urlCheck = true
+        }
+        const condition = message.attachments.size > 0 || urlCheck
 
+        if (condition) {
             let searchResult = await GuildInstance.findOne({ guildId: message.guild.id, 'members.fullUsername': `${message.author.username}#${message.author.discriminator}` })
             if (searchResult == null) {
                 await GuildInstance.updateOne({ guildId: message.guild.id }, { $push: { members: { fullUsername: `${message.author.username}#${message.author.discriminator}`, count: 1 } } })
