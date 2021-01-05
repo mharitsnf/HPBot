@@ -92,19 +92,17 @@ const argumentsHandler = {
                 return
             }
 
-            let parsedResult = [
-                { name: 'Name', value: '', inline: true },
-                { name: 'Count', value: '', inline: true }
-            ]
-            getResult.forEach(value => {
-                parsedResult[0].value += value.member.fullUsername.split('#')[0] + "\n"
-                parsedResult[1].value += value.member.count + "\n"
+            const finalResult = getResult.map(value => {
+                return {
+                    name: value.member.fullUsername.split('#')[0],
+                    value: `Count: ${value.member.count}`
+                }
             })
             
             message.channel.send({
                 embed: {
                     title: 'Top 5 Horny Level',
-                    fields: parsedResult
+                    fields: finalResult
                 }
             })
 
