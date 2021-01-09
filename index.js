@@ -35,6 +35,61 @@ client.on('guildCreate', async guild => {
     }
 })
 
+client.on('messageUpdate', async (_oldMessage, message) => {
+    try {
+        let matches = message.content.match(urlRegexSafe())
+        let urlCheck = false
+        if (matches != null) {
+            const gifFilter = matches.filter(word => !word.includes('tenor'))
+            if (gifFilter.length != 0) urlCheck = true
+        }
+        
+        const condition = message.attachments.size > 0 || urlCheck
+
+        if (condition) {
+            let searchResult = await GuildInstance.findOne({ guildId: message.guild.id, 'members.fullUsername': `${message.author.username}#${message.author.discriminator}` })
+            if (searchResult == null) {
+                await GuildInstance.updateOne({ guildId: message.guild.id }, { $push: { members: { fullUsername: `${message.author.username}#${message.author.discriminator}`, count: 1 } } })
+                await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
+                if (`${message.author.username}#${message.author.discriminator}` == "imsiraf#4245") {
+                    await message.channel.send(`${message.author} is being gay for the first time!`)
+                } else {
+                    await message.channel.send(`${message.author} is being horny for the first time!`)
+                }
+            } else {
+                const user = searchResult.members.filter(member => member.fullUsername == `${message.author.username}#${message.author.discriminator}` )[0]
+                let aggRes = await GuildInstance.aggregate([
+                    {
+                        $match: { guildId: message.guild.id, 'members._id': user._id }
+                    },
+                    {
+                        $addFields: {
+                            index: {
+                                $indexOfArray: [ '$members._id', user._id ]
+                            }
+                        }
+                    }
+                ])
+
+                await GuildInstance.updateOne({ guildId: message.guild.id }, { $set: { [`members.${aggRes[0].index}.count`]: user.count + 1 } })
+                await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
+                if (`${message.author.username}#${message.author.discriminator}` == "imsiraf#4245") {
+                    await message.channel.send(`${message.author} gay count: ${user.count + 1}`)
+                } else {
+                    await message.channel.send(`${message.author} horny count: ${user.count + 1}`)
+                }
+            }
+        }
+
+        return
+
+    } catch (error) {
+        message.channel.send("I'm having a problem. Please try again!")
+        console.log(error)
+        return
+    }
+})
+
 client.on('message', async (message) => {
     try {
         if (message.author.bot) return
@@ -64,7 +119,7 @@ client.on('message', async (message) => {
 
         const currentGuild = await GuildInstance.findOne({ guildId: message.guild.id })
         const activeChannels = currentGuild.channels.map(value => { return value.channelId })
-
+        
         if (!activeChannels.includes(message.channel.id)) return
         
         let matches = message.content.match(urlRegexSafe())
@@ -73,6 +128,7 @@ client.on('message', async (message) => {
             const gifFilter = matches.filter(word => !word.includes('tenor'))
             if (gifFilter.length != 0) urlCheck = true
         }
+        
         const condition = message.attachments.size > 0 || urlCheck
 
         if (condition) {
