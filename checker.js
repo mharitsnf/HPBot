@@ -1,6 +1,6 @@
 const { MessageAttachment } = require("discord.js")
 const urlRegexSafe = require('url-regex-safe')
-const GuildInstance = require('./guildModel')
+const GuildInstance = require('./models/guildModel')
 
 const checker = async (message) => {
     try {
@@ -19,13 +19,9 @@ const checker = async (message) => {
             
             // Both results are null: new user
             if (searchResult == null && searchResultId == null) {
-                await GuildInstance.updateOne({ guildId: message.guild.id }, { $push: { members: { fullUsername: `${message.author.username}#${message.author.discriminator}`, count: 1, memberId: `${message.author.id}` } } })
+                await GuildInstance.updateOne({ guildId: message.guild.id }, { $push: { members: { fullUsername: `${message.author.username}#${message.author.discriminator}`, count: 1, memberId: `${message.author.id}`, gayCount: 0 } } })
                 await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
-                if (`${message.author.username}#${message.author.discriminator}` == "imsiraf#4245") {
-                    await message.channel.send(`${message.author} is being gay for the first time!`)
-                } else {
-                    await message.channel.send(`${message.author} is being horny for the first time!`)
-                }
+                await message.channel.send(`${message.author} is being horny for the first time!`)    
             }
 
             // Search result with ID is null: No ID is stored, insert new ID
@@ -44,13 +40,19 @@ const checker = async (message) => {
                     }
                 ])
 
-                await GuildInstance.updateOne({ guildId: message.guild.id }, { $set: { [`members.${aggRes[0].index}.count`]: user.count + 1, [`members.${aggRes[0].index}.memberId`]: `${message.author.id}` } })
-                await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
-                if (`${message.author.username}#${message.author.discriminator}` == "imsiraf#4245") {
-                    await message.channel.send(`${message.author} gay count: ${user.count + 1}`)
-                } else {
-                    await message.channel.send(`${message.author} horny count: ${user.count + 1}`)
+                let updateData = {
+                    $set: {
+                        [`members.${aggRes[0].index}.count`]: user.count + 1,
+                        [`members.${aggRes[0].index}.memberId`]: `${message.author.id}`
+                    }
                 }
+                if (user.gayCount == undefined) {
+                    updateData['$set'][`members.${aggRes[0].index}.gayCount`] = 0
+                }
+
+                await GuildInstance.updateOne({ guildId: message.guild.id }, updateData)
+                await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
+                await message.channel.send(`${message.author} horny count: ${user.count + 1}, gay count: ${user.gayCount == undefined ? '0' : user.gayCount}`)
             }
             
             // Search and update by ID
@@ -69,13 +71,18 @@ const checker = async (message) => {
                     }
                 ])
 
-                await GuildInstance.updateOne({ guildId: message.guild.id }, { $set: { [`members.${aggRes[0].index}.count`]: user.count + 1 } })
-                await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
-                if (`${message.author.username}#${message.author.discriminator}` == "imsiraf#4245") {
-                    await message.channel.send(`${message.author} gay count: ${user.count + 1}`)
-                } else {
-                    await message.channel.send(`${message.author} horny count: ${user.count + 1}`)
+                let updateData = {
+                    $set: {
+                        [`members.${aggRes[0].index}.count`]: user.count + 1
+                    }
                 }
+                if (user.gayCount == undefined) {
+                    updateData['$set'][`members.${aggRes[0].index}.gayCount`] = 0
+                }
+
+                await GuildInstance.updateOne({ guildId: message.guild.id }, updateData)
+                await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
+                await message.channel.send(`${message.author} horny count: ${user.count + 1}, gay count: ${user.gayCount == undefined ? '0' : user.gayCount}`)
             }
         }
 

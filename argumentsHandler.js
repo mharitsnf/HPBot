@@ -1,3 +1,4 @@
+const urlRegexSafe = require('url-regex-safe')
 
 const argumentsHandler = {
     channel: async (client, message, args) => {
@@ -8,7 +9,7 @@ const argumentsHandler = {
             }
 
             if (args[0] == 'add' || args[0] == 'remove') {
-                if( args.length != 2) {
+                if (args.length != 2) {
                     message.channel.send('Please identify a channel like: `!police channel add #general` or `!police channel remove #general`')
                     return
                 }
@@ -16,7 +17,7 @@ const argumentsHandler = {
 
             const guildId = message.guild.id
 
-            const GuildInstance = require('./guildModel')
+            const GuildInstance = require('./models/guildModel')
 
             if (args[0] == 'add') {
                 const channelCheck = args[1].match(/^<#(.*)>$/gm)
@@ -61,7 +62,7 @@ const argumentsHandler = {
     },
     rank: async (client, message, args) => {
         try {
-            const GuildInstance = require('./guildModel')
+            const GuildInstance = require('./models/guildModel')
 
             let getResult = await GuildInstance.aggregate([
                 {
@@ -95,10 +96,10 @@ const argumentsHandler = {
             const finalResult = getResult.map(value => {
                 return {
                     name: value.member.fullUsername.split('#')[0],
-                    value: `Count: ${value.member.count}`
+                    value: `Count: ${value.member.count}, Gay count ${value.member.gayCount == undefined ? '0' : value.member.gayCount}`
                 }
             })
-            
+
             message.channel.send({
                 embed: {
                     title: 'Top 5 Horny Level',
@@ -107,7 +108,154 @@ const argumentsHandler = {
             })
 
             return
-            
+
+        } catch (error) {
+            message.channel.send("I'm having a problem. Please try again!")
+            console.log(error)
+            return
+        }
+    },
+    appeal: async (client, message, args) => {
+        try {
+            const refMsg = message.referencedMessage
+            const AppealInstance = require('./models/appealModel')
+            const GuildInstance = require('./models/guildModel')
+
+
+            if (refMsg == null) {
+                await message.channel.send("Please reply to another user's message!")
+                return
+            }
+
+            if (refMsg.author.bot) {
+                await message.channel.send("Please reply to a message not from a bot!")
+                return
+            }
+
+            const appealSearch = await AppealInstance.findOne({
+                guildId: refMsg.guild.id,
+                channelId: refMsg.channel.id,
+                messageId: refMsg.id,
+            })
+
+            if (appealSearch != null) {
+                await message.channel.send("That message has been appealed. Move along.")
+                return
+            }
+
+            let matches = refMsg.content.match(urlRegexSafe())
+            let urlCheck = false
+            if (matches != null) {
+                const gifFilter = matches.filter(word => !word.includes('tenor'))
+                if (gifFilter.length != 0) urlCheck = true
+            }
+
+            const condition = refMsg.attachments.size > 0 || urlCheck
+
+            if (!condition) {
+                await message.channel.send("The message does not have any image or link. Move along.")
+                return
+            }
+
+            let rainbowCount = 0
+            let crossCount = 0
+
+            const msg = await message.channel.send(`Is the message sent by ${refMsg.author} gay? Vote within a minute:`)
+            await msg.react('🏳️‍🌈')
+            await msg.react('❌')
+
+            const filter = (reaction, user) => {
+                return ['🏳️‍🌈', '❌'].includes(reaction.emoji.name)
+            }
+
+            const newAppeal = new AppealInstance({
+                guildId: refMsg.guild.id,
+                channelId: refMsg.channel.id,
+                messageId: refMsg.id,
+            })
+
+            const newAppealResult = await newAppeal.save()
+
+            const collector = msg.createReactionCollector(filter, { time: 60000 })
+            collector.on('collect', (reaction, reactionCollector) => {
+                if (reaction.emoji.name === '🏳️‍🌈') {
+                    rainbowCount += 1
+                } else if (reaction.emoji.name === '❌') {
+                    crossCount += 1
+                }
+            })
+            collector.on('end', async (reaction, reactionCollector) => {
+                if (rainbowCount > crossCount) {
+                    await message.channel.send(`${refMsg.author} is gay. Moving previous count to gay count.`)
+
+                    let searchResult = await GuildInstance.findOne({ guildId: message.guild.id, 'members.fullUsername': `${message.author.username}#${message.author.discriminator}` })
+                    let searchResultId = await GuildInstance.findOne({ guildId: message.guild.id, 'members.memberId': `${message.author.id}` })
+
+                    if (searchResult != null && searchResultId == null) {
+                        const user = searchResult.members.filter(member => member.fullUsername == `${message.author.username}#${message.author.discriminator}`)[0]
+                        let aggRes = await GuildInstance.aggregate([
+                            {
+                                $match: { guildId: message.guild.id, 'members._id': user._id }
+                            },
+                            {
+                                $addFields: {
+                                    index: {
+                                        $indexOfArray: ['$members._id', user._id]
+                                    }
+                                }
+                            }
+                        ])
+
+                        let updateData = {
+                            $set: {
+                                [`members.${aggRes[0].index}.count`]: user.count - 1,
+                                [`members.${aggRes[0].index}.memberId`]: `${message.author.id}`
+                            }
+                        }
+                        if (user.gayCount == undefined) {
+                            updateData['$set'][`members.${aggRes[0].index}.gayCount`] = 1
+                        } else {
+                            updateData['$set'][`members.${aggRes[0].index}.gayCount`] = user.gayCount + 1
+                        }
+
+                        await GuildInstance.updateOne({ guildId: message.guild.id }, updateData)
+                        await message.channel.send(`${message.author} horny count: ${updateData['$set'][`members.${aggRes[0].index}.count`]}, gay count: ${updateData['$set'][`members.${aggRes[0].index}.gayCount`]}`)
+                    } else {
+                        const user = searchResult.members.filter(member => member.memberId == `${message.author.id}`)[0]
+                        let aggRes = await GuildInstance.aggregate([
+                            {
+                                $match: { guildId: message.guild.id, 'members._id': user._id }
+                            },
+                            {
+                                $addFields: {
+                                    index: {
+                                        $indexOfArray: ['$members._id', user._id]
+                                    }
+                                }
+                            }
+                        ])
+
+                        let updateData = {
+                            $set: {
+                                [`members.${aggRes[0].index}.count`]: user.count - 1
+                            }
+                        }
+                        if (user.gayCount == undefined) {
+                            updateData['$set'][`members.${aggRes[0].index}.gayCount`] = 1
+                        } else {
+                            updateData['$set'][`members.${aggRes[0].index}.gayCount`] = user.gayCount + 1
+                        }
+
+                        await GuildInstance.updateOne({ guildId: message.guild.id }, updateData)
+                        await message.channel.send(`${message.author} horny count: ${updateData['$set'][`members.${aggRes[0].index}.count`]}, gay count: ${updateData['$set'][`members.${aggRes[0].index}.gayCount`]}`)
+                    }
+                } else {
+                    await message.channel.send(`${refMsg.author} is not gay. Count is not changed.`)
+                }
+            })
+
+            return
+
         } catch (error) {
             message.channel.send("I'm having a problem. Please try again!")
             console.log(error)

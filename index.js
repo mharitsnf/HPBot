@@ -20,8 +20,9 @@ try {
     console.log(error)
 }
 
-const GuildInstance = require('./guildModel')
+const GuildInstance = require('./models/guildModel')
 
+// On entering new server
 client.on('guildCreate', async guild => {
     try {
         const newGuild = new GuildInstance({
@@ -35,8 +36,16 @@ client.on('guildCreate', async guild => {
     }
 })
 
+// On changing message
 client.on('messageUpdate', async (_oldMessage, message) => {
     try {
+        if (message.author.bot) return
+
+        const currentGuild = await GuildInstance.findOne({ guildId: message.guild.id })
+        const activeChannels = currentGuild.channels.map(value => { return value.channelId })
+        
+        if (!activeChannels.includes(message.channel.id)) return
+
         await checker(message)
         return
     } catch (error) {
@@ -46,6 +55,7 @@ client.on('messageUpdate', async (_oldMessage, message) => {
     }
 })
 
+// On receiving message
 client.on('message', async (message) => {
     try {
         if (message.author.bot) return
