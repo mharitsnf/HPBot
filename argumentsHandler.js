@@ -96,7 +96,7 @@ const argumentsHandler = {
             const finalResult = getResult.map(value => {
                 return {
                     name: value.member.fullUsername.split('#')[0],
-                    value: `Count: ${value.member.count}, Gay count ${value.member.gayCount == undefined ? '0' : value.member.gayCount}`
+                    value: `Count: ${value.member.count}, Gay count: ${value.member.gayCount == undefined ? '0' : value.member.gayCount}`
                 }
             })
 

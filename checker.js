@@ -52,8 +52,7 @@ const checker = async (message) => {
 
                 await GuildInstance.updateOne({ guildId: message.guild.id }, updateData)
                 await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
-                await message.channel.send(`${message.author} horny count: ${user.count + 1}`)
-                // await message.channel.send(`${message.author} horny count: ${user.count + 1}, gay count: ${user.gayCount == undefined ? '0' : user.gayCount}`)
+                await message.channel.send(`${message.author} horny count: ${user.count + 1}, gay count: ${user.gayCount == undefined ? '0' : user.gayCount}`)
             }
             
             // Search and update by ID
@@ -83,7 +82,7 @@ const checker = async (message) => {
 
                 await GuildInstance.updateOne({ guildId: message.guild.id }, updateData)
                 await message.channel.send(new MessageAttachment('https://i.kym-cdn.com/entries/icons/facebook/000/033/758/Screen_Shot_2020-04-28_at_12.21.48_PM.jpg'))
-                await message.channel.send(`${message.author} horny count: ${user.count + 1}`)
+                await message.channel.send(`${message.author} horny count: ${user.count + 1}, gay count: ${user.gayCount == undefined ? '0' : user.gayCount}`)
             }
         }
 
