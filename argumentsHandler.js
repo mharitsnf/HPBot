@@ -115,9 +115,19 @@ const argumentsHandler = {
             return
         }
     },
-    appeal: async (client, message, args) => {
+    gayalert: async (client, message, args) => {
         try {
-            const refMsg = message.referencedMessage
+            if (!message.reference) {
+                await message.channel.send("Please reply to another user's message!")
+                return
+            }
+            const referenceChannel = client.channels.resolve(message.reference.channelID)
+            if (!referenceChannel) {
+                await message.channel.send("Please reply to another user's message!")
+                return
+            }
+            const refMsg = referenceChannel.messages.resolve(message.reference.messageID)
+
             const AppealInstance = require('./models/appealModel')
             const GuildInstance = require('./models/guildModel')
 
