@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "git+https://github.com/discordjs/discord.js.git#master",
+    "discord.js": "https://github.com/discordjs/discord.js.git#master",
     "dotenv": "^8.2.0",
     "mongoose": "^5.11.9",
     "url-regex-safe": "^1.0.2"
