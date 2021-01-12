@@ -198,14 +198,14 @@ const argumentsHandler = {
                 if (rainbowCount > crossCount) {
                     await message.channel.send(`${refMsg.author} is gay. Moving previous count to gay count.`)
 
-                    let searchResult = await GuildInstance.findOne({ guildId: message.guild.id, 'members.fullUsername': `${message.author.username}#${message.author.discriminator}` })
-                    let searchResultId = await GuildInstance.findOne({ guildId: message.guild.id, 'members.memberId': `${message.author.id}` })
+                    let searchResult = await GuildInstance.findOne({ guildId: refMsg.guild.id, 'members.fullUsername': `${refMsg.author.username}#${refMsg.author.discriminator}` })
+                    let searchResultId = await GuildInstance.findOne({ guildId: refMsg.guild.id, 'members.memberId': `${refMsg.author.id}` })
 
                     if (searchResult != null && searchResultId == null) {
-                        const user = searchResult.members.filter(member => member.fullUsername == `${message.author.username}#${message.author.discriminator}`)[0]
+                        const user = searchResult.members.filter(member => member.fullUsername == `${refMsg.author.username}#${refMsg.author.discriminator}`)[0]
                         let aggRes = await GuildInstance.aggregate([
                             {
-                                $match: { guildId: message.guild.id, 'members._id': user._id }
+                                $match: { guildId: refMsg.guild.id, 'members._id': user._id }
                             },
                             {
                                 $addFields: {
@@ -219,7 +219,7 @@ const argumentsHandler = {
                         let updateData = {
                             $set: {
                                 [`members.${aggRes[0].index}.count`]: user.count - 1,
-                                [`members.${aggRes[0].index}.memberId`]: `${message.author.id}`
+                                [`members.${aggRes[0].index}.memberId`]: `${refMsg.author.id}`
                             }
                         }
                         if (user.gayCount == undefined) {
@@ -228,13 +228,13 @@ const argumentsHandler = {
                             updateData['$set'][`members.${aggRes[0].index}.gayCount`] = user.gayCount + 1
                         }
 
-                        await GuildInstance.updateOne({ guildId: message.guild.id }, updateData)
+                        await GuildInstance.updateOne({ guildId: refMsg.guild.id }, updateData)
                         await message.channel.send(`${message.author} horny count: ${updateData['$set'][`members.${aggRes[0].index}.count`]}, gay count: ${updateData['$set'][`members.${aggRes[0].index}.gayCount`]}`)
                     } else {
-                        const user = searchResult.members.filter(member => member.memberId == `${message.author.id}`)[0]
+                        const user = searchResult.members.filter(member => member.memberId == `${refMsg.author.id}`)[0]
                         let aggRes = await GuildInstance.aggregate([
                             {
-                                $match: { guildId: message.guild.id, 'members._id': user._id }
+                                $match: { guildId: refMsg.guild.id, 'members._id': user._id }
                             },
                             {
                                 $addFields: {
@@ -256,8 +256,8 @@ const argumentsHandler = {
                             updateData['$set'][`members.${aggRes[0].index}.gayCount`] = user.gayCount + 1
                         }
 
-                        await GuildInstance.updateOne({ guildId: message.guild.id }, updateData)
-                        await message.channel.send(`${message.author} horny count: ${updateData['$set'][`members.${aggRes[0].index}.count`]}, gay count: ${updateData['$set'][`members.${aggRes[0].index}.gayCount`]}`)
+                        await GuildInstance.updateOne({ guildId: refMsg.guild.id }, updateData)
+                        await message.channel.send(`${refMsg.author} horny count: ${updateData['$set'][`members.${aggRes[0].index}.count`]}, gay count: ${updateData['$set'][`members.${aggRes[0].index}.gayCount`]}`)
                     }
                 } else {
                     await message.channel.send(`${refMsg.author} is not gay. Count is not changed.`)
