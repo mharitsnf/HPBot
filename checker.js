@@ -57,6 +57,7 @@ const checker = async (message) => {
             
             // Search and update by ID
             else {
+                console.log(searchResult.members)
                 const user = searchResult.members.filter(member => member.memberId == `${message.author.id}`)[0]
                 let aggRes = await GuildInstance.aggregate([
                     {
