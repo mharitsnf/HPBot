@@ -17,7 +17,6 @@ const checker = async (message) => {
             let searchResult
             try {
                 searchResult = await GuildInstance.findOne({ guildId: message.guild.id, 'members.fullUsername': `${message.author.username}#${message.author.discriminator}` })
-                // console.log(searchResult)
             } catch (error) {
             }
             let searchResultId = await GuildInstance.findOne({ guildId: message.guild.id, 'members.memberId': `${message.author.id}` })

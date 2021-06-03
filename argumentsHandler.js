@@ -170,7 +170,7 @@ const argumentsHandler = {
             let rainbowCount = 0
             let crossCount = 0
 
-            const msg = await message.channel.send(`Is the message sent by ${refMsg.author} gay? Vote within ten minutes:`)
+            const msg = await message.channel.send(`Is the message sent by ${refMsg.author} gay? Vote within ${process.env.VOTE_TIME} minute(s):`)
             await msg.react('🏳️‍🌈')
             await msg.react('❌')
 
@@ -186,7 +186,7 @@ const argumentsHandler = {
 
             const newAppealResult = await newAppeal.save()
 
-            const collector = msg.createReactionCollector(filter, { time: 600000 })
+            const collector = msg.createReactionCollector(filter, { time: parseInt(process.env.VOTE_TIME) * 60000 })
             collector.on('collect', (reaction, reactionCollector) => {
                 if (reaction.emoji.name === '🏳️‍🌈') {
                     rainbowCount += 1
@@ -196,7 +196,7 @@ const argumentsHandler = {
             })
             collector.on('end', async (reaction, reactionCollector) => {
                 if (rainbowCount > crossCount) {
-                    await message.channel.send(`${refMsg.author} is gay. Moving previous count to gay count.`)
+                    await message.channel.send(`${refMsg.author} is gay. Moving previous ${process.env.GAY_TRANSFER_COUNT} count(s) to gay count.`)
 
                     let searchResult = await GuildInstance.findOne({ guildId: refMsg.guild.id, 'members.fullUsername': `${refMsg.author.username}#${refMsg.author.discriminator}` })
                     let searchResultId = await GuildInstance.findOne({ guildId: refMsg.guild.id, 'members.memberId': `${refMsg.author.id}` })
@@ -218,13 +218,13 @@ const argumentsHandler = {
 
                         let updateData = {
                             $set: {
-                                [`members.${aggRes[0].index}.count`]: user.count - parseInt(process.env.UPDATE_COUNT)
+                                [`members.${aggRes[0].index}.count`]: user.count - parseInt(process.env.GAY_TRANSFER_COUNT)
                             }
                         }
                         if (user.gayCount == undefined) {
                             updateData['$set'][`members.${aggRes[0].index}.gayCount`] = 1
                         } else {
-                            updateData['$set'][`members.${aggRes[0].index}.gayCount`] = user.gayCount + parseInt(process.env.UPDATE_COUNT)
+                            updateData['$set'][`members.${aggRes[0].index}.gayCount`] = user.gayCount + parseInt(process.env.GAY_TRANSFER_COUNT)
                         }
 
                         await GuildInstance.updateOne({ guildId: refMsg.guild.id }, updateData)
